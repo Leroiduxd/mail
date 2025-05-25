@@ -23,10 +23,16 @@ const app = express();
 app.use(express.json());
 
 app.post('/send', async (req, res) => {
+  const apiKey = req.headers['x-api-key'];
+  if (apiKey !== process.env.API_KEY) {
+    return res.status(403).json({ error: 'Unauthorized: Invalid API key' });
+  }
+
   const { to, subject, text, html } = req.body;
   if (!to || !subject || (!text && !html)) {
     return res.status(400).json({ error: 'Missing required fields.' });
   }
+
   try {
     await transporter.sendMail({
       from: `"Brokex" <${EMAIL_USER}>`,
@@ -40,6 +46,7 @@ app.post('/send', async (req, res) => {
     res.status(500).json({ error: 'Failed to send mail', details: e.message });
   }
 });
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
